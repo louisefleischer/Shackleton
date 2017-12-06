@@ -1,4 +1,4 @@
-using PyPlot
+#using PyPlot
 
 mutable struct Lander
          x::Int
@@ -78,7 +78,7 @@ x_path = hcat(x_path,[lander.x])
 z_path = hcat(z_path,[lander.z])
 end 
 
-print(lander.x)
+print(z_path)
 
 
-plot(x_path,z_path)
+#plot(x_path,z_path)
