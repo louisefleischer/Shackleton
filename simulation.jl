@@ -40,16 +40,13 @@ function find_flat(belief_map)
     i1_zero = find(iszero,temp)+1
     temp = diff(temp)
     i2_zero = find(iszero,temp)+1
-    println(i1_zero)
-    println(i2_zero)
     index = findin(i2_zero,i1_zero)
-    println("same numbers: ",i2_zero[index])
     return i2_zero[index]
 end
 
 function make_observation(true_map, lander)
     # returns the new value of observation
-    x = [ lander.x-div(lander.z,2); lander.x; lander.x + div(lander.z,2)]
+    x = [lander.x-div(lander.z,2); lander.x; lander.x + div(lander.z,2)]
     h = true_map[x]
     o = Observation(x,h)
 end
@@ -77,10 +74,11 @@ belief_map = true_map
 flat = find_flat(belief_map)
 lander.x = lander.x + take_action(flat, lander)
 lander.z -= 1
-x_path = push!([lander.x])
-z_path = push!([lander.z])
+x_path = hcat(x_path,[lander.x])
+z_path = hcat(z_path,[lander.z])
 end 
 
 print(lander.x)
+
 
 plot(x_path,z_path)
