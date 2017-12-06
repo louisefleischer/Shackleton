@@ -38,9 +38,13 @@ function find_flat(belief_map)
     # finds the indices of the three equal heights
     temp = diff(belief_map)
     i1_zero = find(iszero,temp)+1
-    temp = diff(diff(belief_map))
+    temp = diff(temp)
     i2_zero = find(iszero,temp)+1
-    return findin(i1_zero,i2_zero)
+    println(i1_zero)
+    println(i2_zero)
+    index = findin(i2_zero,i1_zero)
+    println("same numbers: ",i2_zero[index])
+    return i2_zero[index]
 end
 
 function make_observation(true_map, lander)
@@ -73,8 +77,8 @@ belief_map = true_map
 flat = find_flat(belief_map)
 lander.x = lander.x + take_action(flat, lander)
 lander.z -= 1
-x_path = push!(lander.x)
-z_path = push!(lander.z)
+x_path = push!([lander.x])
+z_path = push!([lander.z])
 end 
 
 print(lander.x)
