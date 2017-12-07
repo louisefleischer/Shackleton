@@ -20,35 +20,37 @@ true_map = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
 # Initialize
 # Lander is at altitude 100, terrain is set to zero altitude, its bounds are from zero to 50 m high. 
 lander= Lander(50,50)
-observation_map = zeros(MAP_SIZE,1)-1 #if no observation, set to -1
+#observation_map = zeros(MAP_SIZE,1)-1 #if no observation, set to -1
+old_observations = zeros(MAP_SIZE,2)
 
 # build a belief map with heights and a confidence value
 belief_map = zeros(MAP_SIZE,2)
 x_path = [lander.x]
 z_path = [lander.z]
 
-function update_belief(observation_map,belief_map)
+function update_belief(observation_map,old_observations, new_observation, belief_map)
     # updates the belief_map based on the new observations made
     # aferwards it will be probability map 
-    # DEFINITELY A WAY TO IMPROVE!
 
-    observation_point = 0
-    for i in 1:length(observation_map)
-        if observation_map[i]>-1
-            belief_map[i,:]=[observation_map[i],1]
-            
-        else
-            # find the closest observation point and take that value
-            j = 1
-            while j+i<MAP_SIZE&i-j>MAP_SIZE
-                if observation_map[i-j]!=-1
-                    belief_map[i,1]=observation_map[i-j]
+    belief_map[new_observation[:,1],:]=[new_observation[:,2],1]
 
-            end
-            belief_map[i]= observation_map[j]    
+
+    # for i in 1:length(observation_map)
+    #     if observation_map[i]>-1
+    #         belief_map[i,:]=[observation_map[i],1]
+
+    #     else
+    #         # find the closest observation point and take that value
+    #         j = 1
+    #         while j+i<MAP_SIZE&i-j>MAP_SIZE
+    #             if observation_map[i-j]!=-1
+    #                 belief_map[i,1]=observation_map[i-j]
+
+    #         end
+    #         belief_map[i,1]= observation_map[j]    
             
-        end
-    end
+    #     end
+    # end
     return belief_map
 end
 
@@ -80,21 +82,29 @@ function take_action(flat_place, lander)
     return action
 end
 
+iteration = 0
 while lander.z>(true_map[lander.x])
 
+if iteration%3=0
 # observe
 o = make_observation(true_map, lander)
 observation_map[o.x] = o.h
+new_observation = [o.x,o.h]
 
 # update your belief
-belief_map = update_belief(observation_map, belief_map)
+belief_map = update_belief(observation_map, old_observations, new_observation, belief_map)
 belief_map = true_map
+old_observations = vcat(old_observations;new_observation)
+end
 
 # find flat parts in the belief map 
 flat = find_flat(belief_map)
 
 # make your decision
 lander.x = lander.x + take_action(flat, lander)
+
+
+
 lander.z -= 1
 
 # keep in memory for plotting
