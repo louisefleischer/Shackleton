@@ -1,8 +1,8 @@
 #using PyPlot
 
 mutable struct Lander
- x::Int
- z::Int
+   x::Int
+   z::Int
 end
 
 mutable struct Observation
@@ -78,61 +78,137 @@ function next_state(x,z,action)
     return [x-2+action;z-1]
 end
 
-function compute_reward(x,z,obs,lander,action,observation_map)
+function compute_reward(x,z,lander,action,observation_map)
     # compute reward based on potential observation and action
     # set constants
     R_thrust=-.5
-    R_newobs=10
+    R_newobs=20
     # Cost of action
     R_action=R_thrust(2-R_thrust*(action==2))
     # Reward for observation
     R_obs=0
-    if z==lander.z-3
-        x = [lander.x-div(lander.z,2); lander.x; lander.x + div(lander.z,2)]
-        R_obs=R_newobs*length(findin(observation_map(x),-1))
+    [xp,zp]=next_state(x,z,action)
+    if zp==lander.z-3
+        xobs = [xp-div(zp,2); xp; xp + div(zp,2)]
+        R_obs=R_newobs*length(findin(observation_map(xobs),-1))
+    end
+    #check bounds
+    if x<1 || x>100
+        return -1000
     end
     return R_obs+R_action
 end
 
 function U_ground(belief_map,x)
-    # Calculate utility of potential landing site
-    U_valid=200
-    U_invalid=-50
-    U_maybe_3=100
-    U_maybe_2=50
-    U_maybe_1=0
+    #This function builds the "value" of a landing site
+    U_valid = 200;
+    U_invalid = -50;
+    U_maybe_3 = 100;
+    U_maybe_2 = 50;
+    U_maybe_1 = 0;
+
+    #Test vectors
+    #scan belief_map vector and find rows that have the same height
+    #belief_map = zeros(100,2)
+    #belief_map[:,1] = rand(1:30,map_size,1)
+    #belief_map[:,2] = rand(100,1);
+
+    u_ground = 0
+    
+    h1 = belief_map[x-1,1]; #height 1
+    h2 = belief_map[x,1]; #height 2
+    h3 = belief_map[x+1,1]; #height 3
+
+    b1 = belief_map[x-1,2]; #probability 1
+    b2 = belief_map[x,2]; #probability 2
+    b3 = belief_map[x+1,2]; #probability 3
+
+    if x==1 || x==100
+        #map edge is always invalid
+        return U_invalid     
+    elseif h1 == h2 && h2 == h3 && b1 == 1 && b2 == 1 && b3 == 1 
+        #Giving large reward for a valid landing sight where we are
+        #certain (belief probability = 1) that 3 adjacent heights are
+        #the same
+        return U_valid;
+    elseif (h1 != h2 && b1 == 1 && b2 == 1) || (h2 != h3 && b2==1 && b3==1) ||( h1 != h3 && b1 == 1  && b3 == 1)
+        #Giving large negative reward for an invalid landing sight
+        #where we are certain (belief probability = 1) that 3 adjacent
+        #heights are different
+        return U_invalid;
+    elseif h1 == h2 && h2 == h3 && h1 == h3 && (b1 < 1 || b2 < 1 || b3 < 1)
+        #Giving medium reward for a landing sight where we have
+        #probabilities that 3 adjacent heights are the same
+        return U_maybe_3*b1*b2*b3;
+    elseif (h1 == h2 && (b1<1||b2<1)) || (h2 == h3&& (b3<1||b2<1)) || (h1 == h3&& (b3<1||b1<1))
+        #Giving medium reward for a landing sight where we have
+        #probabilities that 2 adjacent heights are the same
+        return U_maybe_2*(b1*b2*(h1==h2)/abs(h1-h3+1)+b2*b3*(h2==h3)/abs(h2-h1+1)+b3*b1*(h1==h3)/abs(h3-h2+1));
+    else
+        #Giving medium reward for a landing site where we have
+        #probabilities that 2 adjacent heights are the same
+        return U_maybe_1;
+    end
+    
+    #Combined height, belief probability and utility vector
+    #height_belief_utility = hcat(belief_map, u_ground)
+    return u_ground
 end
 
-function update_utility(belief_map,lander)
+function update_utility(belief_map,lander,observation_map)
     #Update utility map from bottom to top
-    U_crash=-200
+    h=belief_map[:,1]
+    U_crash=-1000
+    U=zeros(100,100)
+    U_search=zeros(3,1)
+    for z = 1:lander.z-1
+        for x = max(1,lander.x-lander.z):min(100,lander.x+lander.z)
+            if z<h(x)
+                U[x,z]=U_crash
+            elseif z==h(x)
+                U[x,z]=U_ground(belief_map,x)
+            else
+                for action=1:3
+                    [xp,zp]=next_state(x,z,action)
+                    U_search[action]=compute_reward(x,z,lander,action,observation_map)+U[xp,zp]
+                end
+                U[x,z]=max(U_search)
+            end
+        end
+    end
 end
 
-function take_action(flat_place, lander)
+function choose_action(lander,U_curr)
     # returns the next action
-    #find closest one
-    (A,i_min) = findmin(abs.(flat_place-lander.x))
-    action = sign(flat_place[i_min]-lander.x);
-    return action
+    # find closest one
+    U_next=zeros(3,1)
+    for action=1:3
+        [xp,zp]=next_state(lander.x,lander.z,a)
+        U_next[action]=U_curr[xp,zp]
+    end
+    return indmax(U_next)
 end
 
 iteration = 0
+U_curr=zeros(100,100)
 while lander.z>(true_map[lander.x])
     if iteration%3==0
-    # observe
-    o = make_observation(true_map, lander)
-    observation_map[o.x] = o.h
+        # observe
+        o = make_observation(true_map, lander)
+        observation_map[o.x] = o.h
 
-    # update your belief
-    belief_map = update_belief(observation_map, belief_map)
-    belief_map = true_map
+        # update your belief
+        belief_map = update_belief(observation_map, belief_map)
 
-    # find flat parts in the belief map 
-    flat = find_flat(belief_map)
+        U_curr=update_utility(belief_map,lander,observation_map)
+        # find flat parts in the belief map (obsolete)
+        #flat = find_flat(belief_map)
     end
     # make your decision
-    lander.x = lander.x + take_action(flat, lander)
-    lander.z -= 1
+    opt_action=choose_action(lander,U_curr)
+    [xp,zp]=next_state(lander.x,lander.z,opt_action)
+    lander.x = xp
+    lander.z -= zp
 
     # keep in memory for plotting
     x_path = hcat(x_path,[lander.x])
