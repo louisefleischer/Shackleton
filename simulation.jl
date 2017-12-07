@@ -62,7 +62,7 @@ function next_state(x,z,action)
     return [x-2+action;z-1]
 end
 
-function compute_reward(x,z,lander,action,observation_map)
+function compute_reward(x,z,lander,action,belief_map)
     # compute reward based on potential observation and action
     # set constants
     R_thrust=-.5
@@ -76,7 +76,7 @@ function compute_reward(x,z,lander,action,observation_map)
     zp=sp[2]
     if zp==lander.z-3
         xobs = [max(1,xp-div(zp,2)); xp; min(xp + div(zp,2),100)]
-        R_obs=R_newobs*count(x->x==-1,observation_map[xobs])
+        R_obs=R_newobs*count(x->x<1,belief_map[xobs,2])
     end
     #check bounds
     if x<1 || x>100
@@ -99,7 +99,10 @@ function U_ground(belief_map,x)
     #belief_map[:,1] = rand(1:30,map_size,1)
     #belief_map[:,2] = rand(100,1);
 
-    u_ground = 0
+    if x<=1 || x>=100
+        #map edge is always invalid
+        return U_invalid 
+    end
     
     h1 = belief_map[x-1,1]; #height 1
     h2 = belief_map[x,1]; #height 2
@@ -108,11 +111,8 @@ function U_ground(belief_map,x)
     b1 = belief_map[x-1,2]; #probability 1
     b2 = belief_map[x,2]; #probability 2
     b3 = belief_map[x+1,2]; #probability 3
-
-    if x==1 || x==100
-        #map edge is always invalid
-        return U_invalid     
-    elseif h1 == h2 && h2 == h3 && b1 == 1 && b2 == 1 && b3 == 1 
+    
+    if h1 == h2 && h2 == h3 && b1 == 1 && b2 == 1 && b3 == 1 
         #Giving large reward for a valid landing sight where we are
         #certain (belief probability = 1) that 3 adjacent heights are
         #the same
@@ -141,17 +141,17 @@ function U_ground(belief_map,x)
     return u_ground
 end
 
-function update_utility(belief_map,lander,observation_map)
+function update_utility(belief_map,lander)
     #Update utility map from bottom to top
-    h=belief_map[:,1]
     U_crash=-1000
     U=zeros(100,100)
     U_search=zeros(3,1)
     for z = 1:lander.z-1
         for x = max(1,lander.x-lander.z):min(100,lander.x+lander.z)
-            if z<h[x]
+            h=belief_map[x,1]
+            if z<h
                 U[x,z]=U_crash
-            elseif z==h[x]
+            elseif z==h
                 U[x,z]=U_ground(belief_map,x)
             else
                 for action=1:3
@@ -163,7 +163,7 @@ function update_utility(belief_map,lander,observation_map)
                     elseif zp==0
                         U_search[action]=0
                     else
-                        U_search[action]=compute_reward(x,z,lander,action,observation_map)+U[xp,zp]
+                        U_search[action]=compute_reward(x,z,lander,action,belief_map)+U[xp,zp]
                     end
                 end
                 U[x,z]=maximum(U_search)
@@ -209,13 +209,14 @@ U_curr=zeros(100,100)
 while lander.z>(true_map[lander.x]) && iteration<110
     if iteration%3==0
         # observe
-        o = make_observation(true_map, lander)
-        observation_map[o.x] = o.h
+        #o = make_observation(true_map, lander)
+        #observation_map[o.x] = o.h
 
         # update your belief
-        belief_map = update_belief(observation_map, belief_map)
+        #belief_map = update_belief(observation_map, belief_map)
+        belief_map=hcat(true_map,ones(100,1))
 
-        U_curr=update_utility(belief_map,lander,observation_map)
+        U_curr=update_utility(belief_map,lander)
         # find flat parts in the belief map (obsolete)
         #flat = find_flat(belief_map)
     end
@@ -236,9 +237,17 @@ while lander.z>(true_map[lander.x]) && iteration<110
 end 
 
 println("The lander has arrived at x=",lander.x," and z=", lander.z," in ", iteration, " iterations")
-println(true_map[lander.x-1])
-println(true_map[lander.x])
-println(true_map[lander.x+1])
+println("Measurements made : ",count(x->x==1,belief_map[:,2]))
+h1=true_map[lander.x-1]
+h2=true_map[lander.x]
+h3=true_map[lander.x+1]
+
+if h1==h2 && h2==h3
+    println("Safe landing!")
+else
+    println("Crash! h1=",h1, " h2=",h2, " h3=",h3)
+end
+
 #    hold(true)
 #    plot(x_path',z_path')
 #    plot(collect(1:MAP_SIZE), true_map)
