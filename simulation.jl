@@ -1,8 +1,8 @@
-using PyPlot
+#using PyPlot
 
 mutable struct Lander
-         x::Int
-         z::Int
+ x::Int
+ z::Int
 end
 
 mutable struct Observation
@@ -10,10 +10,12 @@ mutable struct Observation
     h
 end
 
+
+
 MAP_SIZE = 100
 true_map = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
-                collect(linspace(1,50,(100-38))),
-                [4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6, 5, 4, 6, 10, 11, 15, 22, 30, 30, 32, 31, 25, 20, 15, 1,1, 1])
+    collect(linspace(1,50,(100-38))),
+    [4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6, 5, 4, 6, 10, 11, 15, 22, 30, 30, 32, 31, 25, 20, 15, 1,1, 1])
 
 #true_map = collect(linspace(1,50,100))
 
@@ -44,12 +46,13 @@ function update_belief(observation_map,belief_map)
                 if observation_map[i-j]!=-1
                     belief_map[i,1]=observation_map[i-j]
 
+                end
+                belief_map[i]= observation_map[j]    
+
             end
-            belief_map[i]= observation_map[j]    
-            
         end
+        return belief_map
     end
-    return belief_map
 end
 
 function find_flat(belief_map)
@@ -69,8 +72,14 @@ function make_observation(true_map, lander)
     o = Observation(x,h)
 end
 
-function compute_reward(belief_map,lander)
+function compute_reward(obs,lander,action)
     # backpropagation of rewards
+end
+function U_ground(belief_map,x)
+    # Calculate utility of potential landing site
+end
+function update_utility(belief_map,lander)
+    #Update utility map from bottom to top
 end
 function take_action(flat_place, lander)
     # returns the next action
@@ -82,28 +91,28 @@ end
 
 while lander.z>(true_map[lander.x])
 
-# observe
-o = make_observation(true_map, lander)
-observation_map[o.x] = o.h
+    # observe
+    o = make_observation(true_map, lander)
+    observation_map[o.x] = o.h
 
-# update your belief
-belief_map = update_belief(observation_map, belief_map)
-belief_map = true_map
+    # update your belief
+    belief_map = update_belief(observation_map, belief_map)
+    belief_map = true_map
 
-# find flat parts in the belief map 
-flat = find_flat(belief_map)
+    # find flat parts in the belief map 
+    flat = find_flat(belief_map)
 
-# make your decision
-lander.x = lander.x + take_action(flat, lander)
-lander.z -= 1
+    # make your decision
+    lander.x = lander.x + take_action(flat, lander)
+    lander.z -= 1
 
-# keep in memory for plotting
-x_path = hcat(x_path,[lander.x])
-z_path = hcat(z_path,[lander.z])
+    # keep in memory for plotting
+    x_path = hcat(x_path,[lander.x])
+    z_path = hcat(z_path,[lander.z])
 end 
 
 println("The lander has arrived at x=",lander.x," and z=", lander.z)
 
-hold(true)
-plot(x_path',z_path')
-plot(collect(1:MAP_SIZE), true_map)
+#    hold(true)
+#    plot(x_path',z_path')
+#    plot(collect(1:MAP_SIZE), true_map)
