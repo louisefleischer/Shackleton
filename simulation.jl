@@ -1,8 +1,8 @@
 #using PyPlot
 
 mutable struct Lander
-   x::Int
-   z::Int
+ x::Int
+ z::Int
 end
 
 mutable struct Observation
@@ -12,23 +12,7 @@ end
 
 
 
-MAP_SIZE = 100
-true_map = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
-    collect(ceil.(linspace(1,50,(100-38)))),
-    [4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6, 5, 4, 6, 10, 11, 15, 22, 30, 30, 32, 31, 25, 20, 15, 1,1, 1])
 
-#true_map = collect(linspace(1,50,100))
-
-# Initialize
-# Lander is at altitude 100, terrain is set to zero altitude, its bounds are from zero to 50 m high. 
-lander= Lander(50,50)
-#observation_map = zeros(MAP_SIZE,1)-1 #if no observation, set to -1
-old_observations = zeros(MAP_SIZE,2)
-
-# build a belief map with heights and a confidence value
-belief_map = zeros(MAP_SIZE,2)
-x_path = [lander.x]
-z_path = [lander.z]
 
 function update_belief(observation_map,old_observations, new_observation, belief_map)
     # updates the belief_map based on the new observations made
@@ -67,7 +51,7 @@ end
 
 function make_observation(true_map, lander)
     # returns the new value of observation
-    x = [lander.x-div(lander.z,2); lander.x; lander.x + div(lander.z,2)]
+    x = [max(1,lander.x-div(lander.z,2)); lander.x; min(lander.x + div(lander.z,2),100)]
     h = true_map[x]
     o = Observation(x,h)
 end
@@ -84,13 +68,15 @@ function compute_reward(x,z,lander,action,observation_map)
     R_thrust=-.5
     R_newobs=20
     # Cost of action
-    R_action=R_thrust(2-R_thrust*(action==2))
+    R_action=R_thrust*(2-R_thrust*(action==2))
     # Reward for observation
     R_obs=0
-    [xp,zp]=next_state(x,z,action)
+    sp=next_state(x,z,action)
+    xp=sp[1]
+    zp=sp[2]
     if zp==lander.z-3
-        xobs = [xp-div(zp,2); xp; xp + div(zp,2)]
-        R_obs=R_newobs*length(findin(observation_map(xobs),-1))
+        xobs = [max(1,xp-div(zp,2)); xp; min(xp + div(zp,2),100)]
+        R_obs=R_newobs*count(x->x==-1,observation_map[xobs])
     end
     #check bounds
     if x<1 || x>100
@@ -163,27 +149,56 @@ function update_utility(belief_map,lander,observation_map)
     U_search=zeros(3,1)
     for z = 1:lander.z-1
         for x = max(1,lander.x-lander.z):min(100,lander.x+lander.z)
-            if z<h(x)
+            if z<h[x]
                 U[x,z]=U_crash
-            elseif z==h(x)
+            elseif z==h[x]
                 U[x,z]=U_ground(belief_map,x)
             else
                 for action=1:3
-                    [xp,zp]=next_state(x,z,action)
-                    U_search[action]=compute_reward(x,z,lander,action,observation_map)+U[xp,zp]
+                    sp=next_state(x,z,action)
+                    xp=sp[1]
+                    zp=sp[2]
+                    if xp<1 || xp >100
+                        U_search[action]=-1000
+                    elseif zp==0
+                        U_search[action]=0
+                    else
+                        U_search[action]=compute_reward(x,z,lander,action,observation_map)+U[xp,zp]
+                    end
                 end
-                U[x,z]=max(U_search)
+                U[x,z]=maximum(U_search)
             end
         end
     end
+    return U
 end
+
+MAP_SIZE = 100
+true_map = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
+    collect(ceil.(linspace(1,50,(100-38)))),
+    [4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6, 5, 4, 6, 10, 11, 15, 22, 30, 30, 32, 31, 25, 20, 15, 1,1, 1])
+
+#true_map = collect(linspace(1,50,100))
+
+# Initialize
+# Lander is at altitude 100, terrain is set to zero altitude, its bounds are from zero to 50 m high. 
+lander= Lander(50,50)
+#observation_map = zeros(MAP_SIZE,1)-1 #if no observation, set to -1
+old_observations = zeros(MAP_SIZE,2)
+
+# build a belief map with heights and a confidence value
+belief_map = zeros(MAP_SIZE,2)
+x_path = [lander.x]
+z_path = [lander.z]
 
 function choose_action(lander,U_curr)
     # returns the next action
     # find closest one
     U_next=zeros(3,1)
     for action=1:3
-        [xp,zp]=next_state(lander.x,lander.z,a)
+        sp=next_state(lander.x,lander.z,action)
+        xp=sp[1]
+        zp=sp[2]
         U_next[action]=U_curr[xp,zp]
     end
     return indmax(U_next)
@@ -191,7 +206,7 @@ end
 
 iteration = 0
 U_curr=zeros(100,100)
-while lander.z>(true_map[lander.x])
+while lander.z>(true_map[lander.x]) && iteration<110
     if iteration%3==0
         # observe
         o = make_observation(true_map, lander)
@@ -206,17 +221,24 @@ while lander.z>(true_map[lander.x])
     end
     # make your decision
     opt_action=choose_action(lander,U_curr)
-    [xp,zp]=next_state(lander.x,lander.z,opt_action)
+    #println(op_action)
+    sp=next_state(lander.x,lander.z,opt_action)
+    xp=sp[1]
+    zp=sp[2]
     lander.x = xp
-    lander.z -= zp
+    lander.z = zp
 
     # keep in memory for plotting
     x_path = hcat(x_path,[lander.x])
     z_path = hcat(z_path,[lander.z])
+    iteration+=1
+    #println(iteration)
 end 
 
-println("The lander has arrived at x=",lander.x," and z=", lander.z)
-
+println("The lander has arrived at x=",lander.x," and z=", lander.z," in ", iteration, " iterations")
+println(true_map[lander.x-1])
+println(true_map[lander.x])
+println(true_map[lander.x+1])
 #    hold(true)
 #    plot(x_path',z_path')
 #    plot(collect(1:MAP_SIZE), true_map)
