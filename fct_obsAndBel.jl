@@ -19,8 +19,9 @@ function update_belief(observation_map,model)
                 end
              else
                 # associate the closest value ! what if not even
-                for j = 1:floor(Int,(current_obs-previous_obs)/6)
-                    if cmp(model, "linear")
+                
+                if cmp(model, "linear")
+                    for j = 1:floor(Int,(current_obs-previous_obs)/6)
                         delta_z = observation_map[current_obs]-observation_map[previous_obs]
                         belief_map[previous_obs+3*(j-1)+1,:]=[observation_map[previous_obs]+j*delta_z,0.5*belief_map[previous_obs+j-1,2]]
                         belief_map[previous_obs+3*(j-1)+2,:]=[observation_map[previous_obs]+j*delta_z,0.5^2*belief_map[previous_obs+j-1,2]]
@@ -28,15 +29,19 @@ function update_belief(observation_map,model)
                         belief_map[current_obs-3*(j-1)-1,:]=[observation_map[current_obs]-j*delta_z,0.5*belief_map[current_obs-j+1,2]]
                         belief_map[current_obs-3*(j-1)-2,:]=[observation_map[current_obs]-j*delta_z,0.5^2*belief_map[current_obs-j+1,2]]
                         belief_map[current_obs-3*(j-1)-3,:]=[observation_map[current_obs]-j*delta_z,0.5^3*belief_map[current_obs-j+1,2]]
-                    else if cmp(model, "flat")
+                    end
+                else if cmp(model, "flat")
+                    for j = 1:floor(Int,(current_obs-previous_obs)/6)
                         belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
                         belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
-                    else
+                    end
+                else
+                    for j = 1:floor(Int,(current_obs-previous_obs)/6)
                         belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
                         belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
                     end
                 end
-             end
+            end
              previous_obs = i 
         end             
     end
