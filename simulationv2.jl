@@ -24,7 +24,7 @@ x_path = [lander.x]
 z_path = [lander.z]
 
 belief_map=hcat(true_map,ones(100,1))
-U_init=update_utility(belief_map,lander,gamma)
+U_init=update_utility(belief_map,lander,gamma,R_newobs)
 iteration = 0
 U_curr=zeros(100,100)
 while lander.z>(true_map[lander.x]) && iteration<110
@@ -37,7 +37,7 @@ while lander.z>(true_map[lander.x]) && iteration<110
         belief_map = update_belief(observation_map, MODEL)
         #belief_map=hcat(true_map,ones(100,1))
 
-        U_curr=update_utility(belief_map,lander,gamma)
+        U_curr=update_utility(belief_map,lander,gamma,R_newobs)
         # find flat parts in the belief map (obsolete)
         #flat = find_flat(belief_map)
     end

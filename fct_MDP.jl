@@ -7,11 +7,11 @@ function next_state(x,z,action)
     return [x-2+action;z-1]
 end
 
-function compute_reward(x,z,lander,action,belief_map)
+function compute_reward(x,z,lander,action,belief_map,R_newobs)
     # compute reward based on potential observation and action
     # set constants
     R_thrust=-1
-    R_newobs=5
+    #R_newobs=0
 
     R_timeinflight=0
     # Cost of action
@@ -81,7 +81,7 @@ function U_ground(belief_map,x)
     end
 end
 
-function update_utility(belief_map,lander,gamma)
+function update_utility(belief_map,lander,gamma,R_newobs)
     #Update utility map from bottom to top
     U_crash=-600
     U=zeros(100,100)
@@ -103,7 +103,7 @@ function update_utility(belief_map,lander,gamma)
                     elseif zp==0
                         U_search[action]=0
                     else
-                        U_search[action]=compute_reward(x,z,lander,action,belief_map)+gamma*U[xp,zp]
+                        U_search[action]=compute_reward(x,z,lander,action,belief_map,R_newobs)+gamma*U[xp,zp]
                     end
                 end
                 U[x,z]=maximum(U_search)
