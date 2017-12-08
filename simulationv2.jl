@@ -32,13 +32,13 @@ iteration = 0
 U_curr=zeros(100,100)
 while lander.z>(true_map[lander.x]) && iteration<110
     if iteration%3==0
-        # observe
-        #o = make_observation(true_map, lander)
+        observe
+        o = make_observation(true_map, lander)
         #observation_map[o.x] = o.h
 
         # update your belief
-        #belief_map = update_belief(observation_map, belief_map)
-        belief_map=hcat(true_map,ones(100,1))
+        belief_map = update_belief(observation_map, belief_map)
+        #belief_map=hcat(true_map,ones(100,1))
 
         U_curr=update_utility(belief_map,lander,gamma)
         # find flat parts in the belief map (obsolete)
