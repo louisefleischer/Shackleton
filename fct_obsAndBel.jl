@@ -8,12 +8,16 @@ function update_belief(observation_map)
     for i in 1:length(observation_map)
         if observation_map[i]>-1 
             current_obs = i
+            belief_map[i,:]=[observation_map[i],1]
             # back propagate to the left edge
             if previous_obs == 0
-                for j=i-1:1
-                belief_map[j,:]=[observation_map[i],0.5*belief_map[j+1,2]]
+                if !i==1
+                    for j=i-1:1
+                    belief_map[j,:]=[observation_map[i],0.5*belief_map[j+1,2]]
+                    end
                 end
              else
+
                 # associate the closest value ! what if not even
                 for j = 1:floor((current_obs-previous_obs)/2)
                     belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j,1]]
