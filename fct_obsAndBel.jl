@@ -9,7 +9,7 @@ function update_belief(observation_map)
         if observation_map[i]>-1 
             current_obs = i
             # back propagate to the left edge
-            if previous_obs = 0
+            if previous_obs == 0
                 for j=i-1:1
                 belief_map[j,:]=[observation_map[i],0.5*belief_map[j+1,2]]
                 end
