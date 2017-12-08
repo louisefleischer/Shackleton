@@ -10,12 +10,12 @@ end
 function compute_reward(x,z,lander,action,belief_map,R_newobs)
     # compute reward based on potential observation and action
     # set constants
-    R_thrust=-1
+    R_thrust=-3
     #R_newobs=0
 
     R_timeinflight=0
     # Cost of action
-    R_action=R_thrust*((action!=2))
+    R_action=R_thrust*(action==1 || action==3)
     # Reward for observation
     R_obs=0
     sp=next_state(x,z,action)
@@ -26,7 +26,7 @@ function compute_reward(x,z,lander,action,belief_map,R_newobs)
         b1=belief_map[xobs[1],2]
         b2=belief_map[xobs[2],2]
         b3=belief_map[xobs[3],2]
-        R_obs=R_newobs*((b1<1)/(b1+1)+3*(b2<1)/(b2+1)+(b3<1)/(b3+1))
+        R_obs=R_newobs*((b1<1)/(b1+1)+2*(b2<1)/(b2+1)+(b3<1)/(b3+1))
     end
     #check bounds
     if xp<=2 || xp>=99
