@@ -5,7 +5,7 @@ include("fct_MDP.jl")
 include("fct_map.jl")
 
 MAP_SIZE = 100
-srand(1234)
+#srand(1234)
 true_map=build_map(40)
 #true_map_old = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
 #    collect(ceil.(linspace(1,50,(100-38)))),
