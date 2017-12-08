@@ -11,7 +11,7 @@ function update_belief(observation_map)
             belief_map[i,:]=[observation_map[i],1]
             # back propagate to the left edge
             if previous_obs == 0
-                if !i==1
+                if i!=1
                     for j=i-1:1
                     belief_map[j,:]=[observation_map[i],0.5*belief_map[j+1,2]]
                     end
