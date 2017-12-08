@@ -26,7 +26,7 @@ function compute_reward(x,z,lander,action,belief_map)
     end
     #check bounds
     if xp<=2 || xp>=99
-        return -1000
+        return -600
     end
     return R_obs+R_action+R_timeinflight
 end
@@ -83,7 +83,7 @@ end
 
 function update_utility(belief_map,lander,gamma)
     #Update utility map from bottom to top
-    U_crash=-1000
+    U_crash=-600
     U=zeros(100,100)
     U_search=zeros(3,1)
     for z = 1:lander.z-1
@@ -99,7 +99,7 @@ function update_utility(belief_map,lander,gamma)
                     xp=sp[1]
                     zp=sp[2]
                     if xp<1 || xp >100
-                        U_search[action]=-1000
+                        U_search[action]=-600
                     elseif zp==0
                         U_search[action]=0
                     else
