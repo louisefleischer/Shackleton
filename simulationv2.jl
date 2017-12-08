@@ -5,6 +5,7 @@ include("fct_MDP.jl")
 include("fct_map.jl")
 
 MAP_SIZE = 100
+srand(1234)
 true_map=build_map(40)
 #true_map_old = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
 #    collect(ceil.(linspace(1,50,(100-38)))),
@@ -25,6 +26,8 @@ z_path = [lander.z]
 
 gamma=0.95
 
+belief_map=hcat(true_map,ones(100,1))
+U_init=update_utility(belief_map,lander,gamma)
 iteration = 0
 U_curr=zeros(100,100)
 while lander.z>(true_map[lander.x]) && iteration<110
