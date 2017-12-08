@@ -5,16 +5,16 @@ include("fct_MDP.jl")
 include("fct_map.jl")
 
 MAP_SIZE = 100
-true_map=build_map()
-true_map_old = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
-    collect(ceil.(linspace(1,50,(100-38)))),
-    [4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6, 5, 4, 6, 10, 11, 15, 22, 30, 30, 30, 31, 25, 20, 15, 1,1, 1])
+true_map=build_map(40)
+#true_map_old = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
+#    collect(ceil.(linspace(1,50,(100-38)))),
+#    [4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6, 5, 4, 6, 10, 11, 15, 22, 30, 30, 30, 31, 25, 20, 15, 1,1, 1])
 
 #true_map = collect(linspace(1,50,100))
 
 # Initialize
 # Lander is at altitude 100, terrain is set to zero altitude, its bounds are from zero to 50 m high. 
-lander= Lander(50,50)
+lander= Lander(50,100)
 #observation_map = zeros(MAP_SIZE,1)-1 #if no observation, set to -1
 old_observations = zeros(MAP_SIZE,2)
 
@@ -22,6 +22,8 @@ old_observations = zeros(MAP_SIZE,2)
 belief_map = zeros(MAP_SIZE,2)
 x_path = [lander.x]
 z_path = [lander.z]
+
+gamma=0.95
 
 iteration = 0
 U_curr=zeros(100,100)
@@ -35,12 +37,12 @@ while lander.z>(true_map[lander.x]) && iteration<110
         #belief_map = update_belief(observation_map, belief_map)
         belief_map=hcat(true_map,ones(100,1))
 
-        U_curr=update_utility(belief_map,lander)
+        U_curr=update_utility(belief_map,lander,gamma)
         # find flat parts in the belief map (obsolete)
         #flat = find_flat(belief_map)
     end
     # make your decision
-    opt_action=choose_action(lander,U_curr)
+    opt_action=choose_action(lander.x,lander.z,U_curr)
     #println(op_action)
     sp=next_state(lander.x,lander.z,opt_action)
     xp=sp[1]

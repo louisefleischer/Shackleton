@@ -1,3 +1,5 @@
+# Functions related to observations and belief
+
 function update_belief(observation_map,old_observations, new_observation, belief_map)
     # updates the belief_map based on the new observations made
     # aferwards it will be probability map 

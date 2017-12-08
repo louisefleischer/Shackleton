@@ -1,3 +1,6 @@
+# Function related to solving the decision making probabilities
+# We are essentially solving an MDP here
+
 function next_state(x,z,action)
     # compute the next state
     # input: state coordinates, action
@@ -9,7 +12,7 @@ function compute_reward(x,z,lander,action,belief_map)
     # set constants
     R_thrust=-1
     R_newobs=20
-    R_timeinflight=-1
+    R_timeinflight=0
     # Cost of action
     R_action=R_thrust*((action!=2))
     # Reward for observation
@@ -78,7 +81,7 @@ function U_ground(belief_map,x)
     return u_ground
 end
 
-function update_utility(belief_map,lander)
+function update_utility(belief_map,lander,gamma)
     #Update utility map from bottom to top
     U_crash=-1000
     U=zeros(100,100)
@@ -100,7 +103,7 @@ function update_utility(belief_map,lander)
                     elseif zp==0
                         U_search[action]=0
                     else
-                        U_search[action]=compute_reward(x,z,lander,action,belief_map)+U[xp,zp]
+                        U_search[action]=compute_reward(x,z,lander,action,belief_map)+gamma*U[xp,zp]
                     end
                 end
                 U[x,z]=maximum(U_search)
@@ -110,12 +113,12 @@ function update_utility(belief_map,lander)
     return U
 end
 
-function choose_action(lander,U_curr)
+function choose_action(x,z,U_curr)
     # returns the next action
     # find closest one
     U_next=zeros(3,1)
     for action=1:3
-        sp=next_state(lander.x,lander.z,action)
+        sp=next_state(x,z,action)
         xp=sp[1]
         zp=sp[2]
         U_next[action]=U_curr[xp,zp]
