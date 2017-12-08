@@ -14,31 +14,60 @@ function update_belief(observation_map,model)
             if previous_obs == 0
                 if !(i==1)
                     for j=i-1:1
-                    belief_map[j,:]=[observation_map[i],0.5*belief_map[j+1,2]]
+                    belief_map[j,:]=[observation_map[current_obs],0.5*belief_map[j+1,2]]
                     end
                 end
              else
-                # associate the closest value ! what if not even
-                
-                if cmp(model, "linear")
-                    for j = 1:floor(Int,(current_obs-previous_obs)/6)
-                        delta_z = observation_map[current_obs]-observation_map[previous_obs]
-                        belief_map[previous_obs+3*(j-1)+1,:]=[observation_map[previous_obs]+j*delta_z,0.5*belief_map[previous_obs+j-1,2]]
-                        belief_map[previous_obs+3*(j-1)+2,:]=[observation_map[previous_obs]+j*delta_z,0.5^2*belief_map[previous_obs+j-1,2]]
-                        belief_map[previous_obs+3*(j-1)+3,:]=[observation_map[previous_obs]+j*delta_z,0.5^3*belief_map[previous_obs+j-1,2]]
-                        belief_map[current_obs-3*(j-1)-1,:]=[observation_map[current_obs]-j*delta_z,0.5*belief_map[current_obs-j+1,2]]
-                        belief_map[current_obs-3*(j-1)-2,:]=[observation_map[current_obs]-j*delta_z,0.5^2*belief_map[current_obs-j+1,2]]
-                        belief_map[current_obs-3*(j-1)-3,:]=[observation_map[current_obs]-j*delta_z,0.5^3*belief_map[current_obs-j+1,2]]
+                # associate the closest value 
+                if model== "linear"
+                    # a few notation shortcuts
+                    z_c = observation_map[current_obs]
+                    z_p = observation_map[previous_obs]
+                    dz_dp = (z_c-z_p)/(current_obs-previous_obs)
+                    middle_point = floor(Int,(current_obs-previous_obs)/2)
+                    j_max = floor(Int, (current_obs-previous_obs)/6)
+                    reste = (current_obs-previous_obs)%6
+
+                    # observations more than 6 cases appart
+                    if !(middle_point==0)
+                        for j = 1:j_max
+                                for i_flat in 1:3
+                                    belief_map[previous_obs+3*(j-1)+i_flat,:]=[observation_map[previous_obs]+floor((3*(j-1)+2)*dz_dp),0.5^i_flat*belief_map[previous_obs+3*(j-1),2]]
+                                    belief_map[current_obs-3*(j-1)-i_flat,:]=[observation_map[current_obs]-floor((3*(j-1)+2)*dz_dp),0.5^i_flat*belief_map[current_obs-3*(j-1),2]]
+                                end   
+                        end
                     end
-                else if cmp(model, "flat")
+
+                    # deal with the discontinuity at the middle
+                    if !(reste==0)
+                        for i_flat in 1:reste
+                                belief_map[previous_obs+3*j_max+i_flat,:]=[(z_c+z_p)/2,0.5^middle_point*belief_map[previous_obs+3*j_max,2]]
+                        end
+                    end
+
+                elseif model=="flat"
+                    
                     for j = 1:floor(Int,(current_obs-previous_obs)/2)
                         belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
                         belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
+                    end
+
+                    # deal with center anomaly
+                    center = floor(Int,(current_obs-previous_obs)/2)
+                    if (current_obs-previous_obs)%2==1&!(center==0)
+                        belief_map[center+1,:]=[belief_map[center],0.5*belief_map[center,2]]
                     end
                 else
+                    
                     for j = 1:floor(Int,(current_obs-previous_obs)/2)
                         belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
                         belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
+                    end
+
+                    # deal with center anomaly
+                    center = floor(Int,(current_obs-previous_obs)/2)
+                    if (current_obs-previous_obs)%2==1
+                        belief_map[center+1,:]=[belief_map[center],0.5*belief_map[center,2]]
                     end
                 end
             end
