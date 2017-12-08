@@ -1,28 +1,34 @@
 # Functions related to observations and belief
 
-function update_belief(observation_map,old_observations, new_observation, belief_map)
+function update_belief(observation_map)
     # updates the belief_map based on the new observations made
     # aferwards it will be probability map 
-
-    observation_point = 0
+    belief_map = zeros(length(observation_map),2)
+    previous_obs = 0
     for i in 1:length(observation_map)
-        if observation_map[i]>-1
-            belief_map[i,:]=[observation_map[i],1]
-            
-        else
-            # find the closest observation point and take that value
-            j = 1
-            while j+i<MAP_SIZE&i-j>MAP_SIZE
-                if observation_map[i-j]!=-1
-                    belief_map[i,1]=observation_map[i-j]
-
+        if observation_map[i]>-1 
+            current_obs = i
+            # back propagate to the left edge
+            if previous_obs = 0
+                for j=i-1:1
+                belief_map[j,:]=[observation_map[i],0.5*belief_map[j+1,2]]
                 end
-                belief_map[i]= observation_map[j]    
-
-            end
-        end
-        return belief_map
+             else
+                # associate the closest value ! what if not even
+                for j = 1:floor((current_obs-previous_obs)/2)
+                    belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j,1]]
+                    belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs+j,1]]
+                end
+             end
+             previous_obs = i 
+        end             
     end
+
+    # forward propagation to the right edge
+    for j = current_obs+1:length(observation_map)
+        belief_map[j,:]= belief_map[current_obs,0.5*belief_map[j-1,2]]
+    end
+    return belief_map
 end
 
 function find_flat(belief_map)
