@@ -23,7 +23,10 @@ function compute_reward(x,z,lander,action,belief_map)
     zp=sp[2]
     if zp==lander.z-3
         xobs = [max(1,xp-div(zp,2)); xp; min(xp + div(zp,2),100)]
-        R_obs=R_newobs*((belief_map[xobs[1],2]<1)+3*(belief_map[xobs[2],2]<1)+(belief_map[xobs[3],2]<1))
+        b1=belief_map[xobs[1],2]
+        b2=belief_map[xobs[2],2]
+        b3=belief_map[xobs[3],2]
+        R_obs=R_newobs*((b1<1)/(b1+1)+3*(b2<1)/(b2+1)+(b3<1)/(b3+1))
     end
     #check bounds
     if xp<=2 || xp>=99
