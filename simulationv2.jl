@@ -3,10 +3,11 @@ include("structures.jl")
 include("fct_obsAndBel.jl")
 include("fct_MDP.jl")
 include("fct_map.jl")
+include("params.jl")
 
 MAP_SIZE = 100
 #srand(1234)
-true_map=build_map(40)
+true_map=build_map(max_heigh)
 #true_map_old = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
 #    collect(ceil.(linspace(1,50,(100-38)))),
 #    [4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6, 5, 4, 6, 10, 11, 15, 22, 30, 30, 30, 31, 25, 20, 15, 1,1, 1])
@@ -23,14 +24,12 @@ belief_map = zeros(MAP_SIZE,2)
 x_path = [lander.x]
 z_path = [lander.z]
 
-gamma=0.95
-
 belief_map=hcat(true_map,ones(100,1))
 U_init=update_utility(belief_map,lander,gamma)
 iteration = 0
 U_curr=zeros(100,100)
 while lander.z>(true_map[lander.x]) && iteration<110
-    if iteration%3==0
+    if iteration%obs_lag==0
         #observe
         o = make_observation(true_map, lander)
         observation_map[o.x] = o.h

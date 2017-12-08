@@ -5,6 +5,7 @@ function update_belief(observation_map)
     # aferwards it will be probability map 
     belief_map = zeros(length(observation_map),2)
     previous_obs = 0
+    current_obs=0
     for i in 1:length(observation_map)
         if observation_map[i]>-1 
             current_obs = i
@@ -18,9 +19,9 @@ function update_belief(observation_map)
                 end
              else
                 # associate the closest value ! what if not even
-                for j = 1:floor((current_obs-previous_obs)/2)
-                    belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j,1]]
-                    belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs+j,1]]
+                for j = 1:floor(Int,(current_obs-previous_obs)/2)
+                    belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
+                    belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
                 end
              end
              previous_obs = i 
