@@ -1,6 +1,6 @@
 # Functions related to observations and belief
 
-function update_belief(observation_map)
+function update_belief(observation_map,model)
     # updates the belief_map based on the new observations made
     # aferwards it will be probability map 
     belief_map = zeros(length(observation_map),2)
@@ -19,9 +19,22 @@ function update_belief(observation_map)
                 end
              else
                 # associate the closest value ! what if not even
-                for j = 1:floor(Int,(current_obs-previous_obs)/2)
-                    belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
-                    belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
+                for j = 1:floor(Int,(current_obs-previous_obs)/6)
+                    if cmp(model, "linear")
+                        delta_z = observation_map[current_obs]-observation_map[previous_obs]
+                        belief_map[previous_obs+3*(j-1)+1,:]=[observation_map[previous_obs]+j*delta_z,0.5*belief_map[previous_obs+j-1,2]]
+                        belief_map[previous_obs+3*(j-1)+2,:]=[observation_map[previous_obs]+j*delta_z,0.5^2*belief_map[previous_obs+j-1,2]]
+                        belief_map[previous_obs+3*(j-1)+3,:]=[observation_map[previous_obs]+j*delta_z,0.5^3*belief_map[previous_obs+j-1,2]]
+                        belief_map[current_obs-3*(j-1)-1,:]=[observation_map[current_obs]-j*delta_z,0.5*belief_map[current_obs-j+1,2]]
+                        belief_map[current_obs-3*(j-1)-2,:]=[observation_map[current_obs]-j*delta_z,0.5^2*belief_map[current_obs-j+1,2]]
+                        belief_map[current_obs-3*(j-1)-3,:]=[observation_map[current_obs]-j*delta_z,0.5^3*belief_map[current_obs-j+1,2]]
+                    else if cmp(model, "flat")
+                        belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
+                        belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
+                    else
+                        belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
+                        belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
+                    end
                 end
              end
              previous_obs = i 

@@ -6,6 +6,7 @@ include("fct_map.jl")
 include("params.jl")
 
 MAP_SIZE = 100
+MODEL = "linear"
 #srand(1234)
 true_map=build_map(max_heigh)
 #true_map_old = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
@@ -35,7 +36,7 @@ while lander.z>(true_map[lander.x]) && iteration<110
         observation_map[o.x] = o.h
 
         # update your belief
-        belief_map = update_belief(observation_map)
+        belief_map = update_belief(observation_map, MODEL)
         #belief_map=hcat(true_map,ones(100,1))
 
         U_curr=update_utility(belief_map,lander,gamma)
