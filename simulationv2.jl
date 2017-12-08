@@ -16,8 +16,7 @@ true_map=build_map(40)
 # Initialize
 # Lander is at altitude 100, terrain is set to zero altitude, its bounds are from zero to 50 m high. 
 lander= Lander(50,100)
-#observation_map = zeros(MAP_SIZE,1)-1 #if no observation, set to -1
-old_observations = zeros(MAP_SIZE,2)
+observation_map = zeros(MAP_SIZE,1)-1 #if no observation, set to -1
 
 # build a belief map with heights and a confidence value
 belief_map = zeros(MAP_SIZE,2)
@@ -32,12 +31,12 @@ iteration = 0
 U_curr=zeros(100,100)
 while lander.z>(true_map[lander.x]) && iteration<110
     if iteration%3==0
-        observe
+        #observe
         o = make_observation(true_map, lander)
-        #observation_map[o.x] = o.h
+        observation_map[o.x] = o.h
 
         # update your belief
-        belief_map = update_belief(observation_map, belief_map)
+        belief_map = update_belief(observation_map)
         #belief_map=hcat(true_map,ones(100,1))
 
         U_curr=update_utility(belief_map,lander,gamma)
