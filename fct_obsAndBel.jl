@@ -14,7 +14,8 @@ function update_belief(observation_map)
                 belief_map[j,:]=[observation_map[i],0.5*belief_map[j+1,2]]
                 end
              else
-                for j = 1:floor(abs(previous_obs-current_obs))
+                # associate the closest value ! what if not even
+                for j = 1:floor((current_obs-previous_obs)/2)
                     belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j,1]]
                     belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs+j,1]]
                 end
@@ -23,7 +24,7 @@ function update_belief(observation_map)
         end             
     end
 
-    # back propagation
+    # forward propagation to the right edge
     for j = current_obs+1:length(observation_map)
         belief_map[j,:]= belief_map[current_obs,0.5*belief_map[j-1,2]]
     end
