@@ -31,12 +31,12 @@ function update_belief(observation_map,model)
                         belief_map[current_obs-3*(j-1)-3,:]=[observation_map[current_obs]-j*delta_z,0.5^3*belief_map[current_obs-j+1,2]]
                     end
                 else if cmp(model, "flat")
-                    for j = 1:floor(Int,(current_obs-previous_obs)/6)
+                    for j = 1:floor(Int,(current_obs-previous_obs)/2)
                         belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
                         belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
                     end
                 else
-                    for j = 1:floor(Int,(current_obs-previous_obs)/6)
+                    for j = 1:floor(Int,(current_obs-previous_obs)/2)
                         belief_map[previous_obs+j,:]=[observation_map[previous_obs],0.5*belief_map[previous_obs+j-1,2]]
                         belief_map[current_obs-j,:]=[observation_map[current_obs],0.5*belief_map[current_obs-j+1,2]]
                     end
