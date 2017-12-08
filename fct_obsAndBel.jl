@@ -24,12 +24,12 @@ function update_belief(observation_map,model)
                     z_c = observation_map[current_obs]
                     z_p = observation_map[previous_obs]
                     dz_dp = (z_c-z_p)/(current_obs-previous_obs)
-                    middle_point = floor(Int,(current_obs-previous_obs)/2)
-                    j_max = floor(Int, (current_obs-previous_obs)/6)
-                    reste = (current_obs-previous_obs)%6
+                    middle_point = floor(Int,(current_obs-previous_obs-1)/2)
+                    j_max = floor(Int, (current_obs-previous_obs-1)/6)
+                    reste = (current_obs-previous_obs-1)%6
 
                     # observations more than 6 cases appart
-                    if !(middle_point==0)
+                    if !(j_max==0)
                         for j = 1:j_max
                                 for i_flat in 1:3
                                     belief_map[previous_obs+3*(j-1)+i_flat,:]=[observation_map[previous_obs]+floor((3*(j-1)+2)*dz_dp),0.5^i_flat*belief_map[previous_obs+3*(j-1),2]]
