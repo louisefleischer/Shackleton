@@ -6,7 +6,7 @@ include("fct_map.jl")
 include("params.jl")
 
 MAP_SIZE = 100
-true_map=build_map(max_heigh)
+true_map=build_map(max_height)
 #true_map_old = vcat([1, 2, 3, 3, 3, 4, 5, 6, 6, 5],
 #    collect(ceil.(linspace(1,50,(100-38)))),
 #    [4, 3, 2, 1, 1, 1, 2, 3, 4, 5, 6, 5, 4, 6, 10, 11, 15, 22, 30, 30, 30, 31, 25, 20, 15, 1,1, 1])
