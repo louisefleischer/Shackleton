@@ -7,10 +7,16 @@ function next_state(x,z,action)
     return [x-2+action;z-1]
 end
 
+function compute_reward_action(action)
+    R_thrust=-1
+    return R_thrust*(action==1 || action==3)
+end
+
 function compute_reward(x,z,lander,action,belief_map,R_newobs)
+    #OBSOLETE
     # compute reward based on potential observation and action
     # set constants
-    R_thrust=-3
+    R_thrust=-1
     #R_newobs=0
 
     R_timeinflight=0
@@ -81,7 +87,7 @@ function U_ground(belief_map,x)
     end
 end
 
-function update_utility(belief_map,lander,gamma,R_newobs)
+function update_utility(belief_map,lander,gamma,R_obsmap)
     #Update utility map from bottom to top
     U_crash=-600
     U=zeros(100,100)
@@ -103,7 +109,7 @@ function update_utility(belief_map,lander,gamma,R_newobs)
                     elseif zp==0
                         U_search[action]=0
                     else
-                        U_search[action]=compute_reward(x,z,lander,action,belief_map,R_newobs)+gamma*U[xp,zp]
+                        U_search[action]=compute_reward_action(action)+R_obsmap[xp,zp]+gamma*U[xp,zp]
                     end
                 end
                 U[x,z]=maximum(U_search)
@@ -113,7 +119,7 @@ function update_utility(belief_map,lander,gamma,R_newobs)
     return U
 end
 
-function choose_action(x,z,U_curr)
+function choose_action(x,z,U_curr,R_obsmap)
     # returns the next action
     # find closest one
     U_next=zeros(3,1)
@@ -124,7 +130,7 @@ function choose_action(x,z,U_curr)
         if xp<=1 || xp >=100
             U_next[action]=-100000
         else
-            U_next[action]=U_curr[xp,zp]
+            U_next[action]=compute_reward_action(action)+R_obsmap[xp,zp]+U_curr[xp,zp]
         end
     end
     return indmax(U_next)

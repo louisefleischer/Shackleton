@@ -23,25 +23,41 @@ x_path = [lander.x]
 z_path = [lander.z]
 
 belief_map=hcat(true_map,ones(100,1))
-U_init=update_utility(belief_map,lander,gamma,R_newobs)
+R_obsmap=zeros(100,100)
+U_init=update_utility(belief_map,lander,gamma,R_obsmap)
 iteration = 0
 U_curr=zeros(100,100)
+fig = figure()
 while lander.z>(true_map[lander.x]) && iteration<110
     if iteration%obs_lag==0
-        #observe
+        # observe
         o = make_observation(true_map, lander)
         observation_map[o.x] = o.h
 
         # update your belief
         belief_map = update_belief(observation_map, MODEL)
         #belief_map=hcat(true_map,ones(100,1))
-
-        U_curr=update_utility(belief_map,lander,gamma,R_newobs)
+        
+        #Search incentive
+        R_obsmap=zeros(100,100)
+        z=lander.z-obs_lag
+        if z>1
+            for x=max(1,lander.x-obs_lag):min(100,lander.x+obs_lag)
+                xobs = [max(1,x-div(z,2)); x; min(x + div(z,2),100)]
+                b1=belief_map[xobs[1],2]
+                b2=belief_map[xobs[2],2]
+                b3=belief_map[xobs[3],2]
+                R_obsmap[x,z]=R_newobs*((b1<1)+2*(b2<1)+(b3<1))
+            end
+        end
+        #(maximum(R_obsmap))
+        
+        U_curr=update_utility(belief_map,lander,gamma,R_obsmap)
         # find flat parts in the belief map (obsolete)
         #flat = find_flat(belief_map)
     end
     # make your decision
-    opt_action=choose_action(lander.x,lander.z,U_curr)
+    opt_action=choose_action(lander.x,lander.z,U_curr,R_obsmap)
     #println(op_action)
     sp=next_state(lander.x,lander.z,opt_action)
     xp=sp[1]
