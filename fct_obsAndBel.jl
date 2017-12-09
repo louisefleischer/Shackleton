@@ -77,7 +77,7 @@ function update_belief(observation_map,model)
 
     # forward propagation to the right edge
     for j = current_obs+1:length(observation_map)
-        belief_map[j,:]= belief_map[current_obs,0.5*belief_map[j-1,2]]
+        belief_map[j,:]= [observation_map[current_obs],0.5*belief_map[j-1,2]]
     end
     return belief_map
 end
