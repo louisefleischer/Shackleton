@@ -15,7 +15,6 @@ true_map=build_map(max_heigh)
 
 # Initialize
 # Lander is at altitude 100, terrain is set to zero altitude, its bounds are from zero to 50 m high. 
-lander= Lander(50,100)
 observation_map = zeros(MAP_SIZE,1)-1 #if no observation, set to -1
 
 # build a belief map with heights and a confidence value

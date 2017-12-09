@@ -1,32 +1,30 @@
-# Function related to solving the decision making probabilities
-# We are essentially solving an MDP here
+#Alternative version where left and right allow you to hover instead of diagonal
+#UNFINISHED, do not use
 
 function next_state(x,z,action)
     # compute the next state
     # input: state coordinates, action
-    return [x-2+action;z-1]
+    return [x-(action==1)+(action==3);z-(action==2)]
 end
 
 function compute_reward(x,z,lander,action,belief_map,R_newobs)
     # compute reward based on potential observation and action
     # set constants
-    R_thrust=-3
-    #R_newobs=0
-
+    R_hover=-3
     R_timeinflight=0
     # Cost of action
-    R_action=R_thrust*(action==1 || action==3)
+    R_action=R_hover*((action!=2))
     # Reward for observation
     R_obs=0
     sp=next_state(x,z,action)
     xp=sp[1]
     zp=sp[2]
-    if zp==lander.z-3
+    if abs(lander.z-zp)+abs(lander.x-xp)==3
         xobs = [max(1,xp-div(zp,2)); xp; min(xp + div(zp,2),100)]
         b1=belief_map[xobs[1],2]
         b2=belief_map[xobs[2],2]
         b3=belief_map[xobs[3],2]
-        R_obs=R_newobs*((b1<1)/(b1+1)+2*(b2<1)/(b2+1)+(b3<1)/(b3+1))
+        R_obs=R_newobs*((b1<1)/(b1+1)+3*(b2<1)/(b2+1)+(b3<1)/(b3+1))
     end
     #check bounds
     if xp<=2 || xp>=99
@@ -37,11 +35,11 @@ end
 
 function U_ground(belief_map,x)
     #This function builds the "value" of a landing site
-    U_valid = 200
-    U_invalid = -200
-    U_maybe_3 = 100
-    U_maybe_2 = 0#50;
-    U_maybe_1 = -10
+    U_valid = 200;
+    U_invalid = -200;
+    U_maybe_3 = 100;
+    U_maybe_2 = 50;
+    U_maybe_1 = 0;
 
     if x<=1 || x>=100
         #map edge is always invalid
@@ -86,14 +84,23 @@ function update_utility(belief_map,lander,gamma,R_newobs)
     U_crash=-600
     U=zeros(100,100)
     U_search=zeros(3,1)
-    for z = 1:lander.z-1
-        for x = max(1,lander.x-(lander.z-z)):min(100,lander.x+(lander.z-z))
+    deltaU_tol=1e-3
+    for z = 1:lander.z
+        sky_at_z=[]
+        for x = max(1,lander.x-(lander.z-z)-3):min(100,lander.x+(lander.z-z)+3)
             h=belief_map[x,1]
             if z<h
                 U[x,z]=U_crash
             elseif z==h
                 U[x,z]=U_ground(belief_map,x)
             else
+                push!(sky_at_z,[x])
+            end
+        end
+        deltaU=deltaU_tol*10
+        while deltaU>deltaU_tol && length(sky_at_z)>0
+            U_old=U
+            for x =1:length(sky_at_z)
                 for action=1:3
                     sp=next_state(x,z,action)
                     xp=sp[1]
@@ -108,24 +115,21 @@ function update_utility(belief_map,lander,gamma,R_newobs)
                 end
                 U[x,z]=maximum(U_search)
             end
+            deltaU=maximum(abs(U_old-U))
         end
     end
     return U
 end
 
-function choose_action(x,z,U_curr)
+function choose_action(lander,U_curr)
     # returns the next action
     # find closest one
     U_next=zeros(3,1)
     for action=1:3
-        sp=next_state(x,z,action)
+        sp=next_state(lander.x,lander.z,action)
         xp=sp[1]
         zp=sp[2]
-        if xp<=1 || xp >=100
-            U_next[action]=-100000
-        else
-            U_next[action]=U_curr[xp,zp]
-        end
+        U_next[action]=U_curr[xp,zp]
     end
     return indmax(U_next)
 end
