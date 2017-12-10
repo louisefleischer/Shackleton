@@ -41,7 +41,7 @@ function update_belief(observation_map,model)
                     # deal with the discontinuity at the middle
                     if !(reste==0)
                         for i_flat in 1:reste
-                                belief_map[previous_obs+3*j_max+i_flat,:]=[(z_c+z_p)/2,0.5^middle_point*belief_map[previous_obs+3*j_max,2]]
+                                belief_map[previous_obs+3*j_max+i_flat,:]=[(z_c+z_p)/2,0.5^(middle_point+1)*belief_map[previous_obs+3*j_max,2]]
                         end
                     end
 
