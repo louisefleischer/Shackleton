@@ -105,9 +105,10 @@ function update_utility(belief_map,lander,gamma,R_obsmap)
         end
         deltaU=deltaU_tol*10
         iteration=0
-        while (deltaU>deltaU_tol && length(sky_at_z)>0 && iteration <4) || iteration<3
+        while (deltaU>deltaU_tol && length(sky_at_z)>0 && iteration<20) || iteration<3
             U_old=U
-            for x =1:length(sky_at_z)
+            for ii =1:length(sky_at_z)
+                x=sky_at_z[ii]
                 for action=1:3
                     sp=next_state(x,z,action)
                     xp=sp[1]
@@ -123,6 +124,7 @@ function update_utility(belief_map,lander,gamma,R_obsmap)
                 U[x,z]=maximum(U_search)
             end
             deltaU=maximum(abs.(U_old-U))
+            iteration+=1
         end
     end
     return U
@@ -136,7 +138,11 @@ function choose_action(x,z,U_curr,R_obsmap)
         sp=next_state(x,z,action)
         xp=sp[1]
         zp=sp[2]
-        U_next[action]=U_curr[xp,zp]+R_obsmap[xp,zp]+compute_reward_action(action)
+        if xp<2 || xp>99
+            U_next[action]=-600
+        else
+            U_next[action]=U_curr[xp,zp]+R_obsmap[xp,zp]+compute_reward_action(action)
+        end
     end
     return indmax(U_next)
 end
