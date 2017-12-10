@@ -90,10 +90,10 @@ function update_utility(belief_map,lander,gamma,R_obsmap)
     U_crash=-600
     U=zeros(100,100)
     U_search=zeros(3,1)
-    deltaU_tol=1e-3
+    deltaU_tol=1e-5
     for z = 1:lander.z
         sky_at_z=[]
-        for x = max(1,lander.x-(lander.z-z)-3):min(100,lander.x+(lander.z-z)+3)
+        for x = 1:100
             h=belief_map[x,1]
             if z<h
                 U[x,z]=U_crash
@@ -104,7 +104,8 @@ function update_utility(belief_map,lander,gamma,R_obsmap)
             end
         end
         deltaU=deltaU_tol*10
-        while deltaU>deltaU_tol && length(sky_at_z)>0
+        iteration=0
+        while (deltaU>deltaU_tol && length(sky_at_z)>0 && iteration <4) || iteration<3
             U_old=U
             for x =1:length(sky_at_z)
                 for action=1:3

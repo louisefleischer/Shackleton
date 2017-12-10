@@ -27,7 +27,7 @@ R_obsmap=zeros(100,100)
 U_init=update_utility(belief_map,lander,gamma,R_obsmap)
 iteration = 0
 U_curr=zeros(100,100)
-fig = figure()
+
 while lander.z>(true_map[lander.x]) && iteration<110
     if iteration%obs_lag==0
         # observe
