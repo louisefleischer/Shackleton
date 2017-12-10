@@ -1,4 +1,4 @@
-#srand(1234)
+srand(1993)
 lander= Lander(50,100)
 R_newobs=5
 max_height=50
